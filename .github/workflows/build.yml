@@ -696,8 +696,13 @@ aW5ncy5ncmFkbGUua3RzUEsFBgAAAAAbABsAvQkAALJ0AAAAAA== | tr -d ' ' >> p.b64 && bas
 },
 {
 "name": "Setup Keystore",
-"env": { "KEYSTORE_BASE64": "{{ secrets.KEYSTORE_BASE64 }}" },
-"run": "set +e; rm -f app/release.keystore; if [ -n \"$KEYSTORE_BASE64\" ]; then printf \"%s\" \"$KEYSTORE_BASE64\" | tr -d \"[:space:]\" | base64 -d > app/release.keystore 2>/dev/null; fi; if [ ! -s app/release.keystore ]; then rm -f app/release.keystore; echo \"Generating fallback release keystore\"; keytool -genkeypair -v -keystore app/release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias egpcurrency -storepass egpcurrency123 -keypass egpcurrency123 -dname \"CN=Mohamed Badawy, O=SarfApp, C=EG\" || exit 1; else echo \"Restored persistent keystore\"; fi"
+"env": {
+"KEYSTORE_BASE64": "{{ secrets.KEYSTORE_BASE64 }}",
+"KEYSTORE_STORE_PASS": "{{ secrets.KEYSTORE_STORE_PASS }}",
+"KEYSTORE_KEY_ALIAS": "{{ secrets.KEYSTORE_KEY_ALIAS }}",
+"KEYSTORE_KEY_PASS": "{{ secrets.KEYSTORE_KEY_PASS }}"
+},
+"run": "set +e; STORE_P="{KEYSTORE_STORE_PASS:-egpcurrency123}\"; KEY_A=\"{KEYSTORE_KEY_ALIAS:-egpcurrency}"; KEY_P="${KEYSTORE_KEY_PASS:-egpcurrency123}"; rm -f app/release.keystore; if [ -n "$KEYSTORE_BASE64" ]; then printf "%s" "$KEYSTORE_BASE64" | tr -d "[:space:]" | base64 -d > app/release.keystore 2>/dev/null; fi; if [ ! -s app/release.keystore ] || ! keytool -list -keystore app/release.keystore -storepass "$STORE_P" -alias "$KEY_A" >/dev/null 2>&1; then rm -f app/release.keystore; echo "Generating fallback release keystore"; keytool -genkeypair -v -keystore app/release.keystore -keyalg RSA -keysize 2048 -validity 10000 -alias "KEY_A\" -storepass \"$STORE_P\" -keypass \"$KEY_P\" -dname \"CN=Mohamed Badawy, O=SarfApp, C=EG\" || exit 1; else echo \"Restored persistent keystore\"; fi"
 },
 {
 "name": "Set up Gradle",
